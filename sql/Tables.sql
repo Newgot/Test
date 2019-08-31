@@ -1,0 +1,76 @@
+CREATE TABLE IF NOT EXISTS table1 (
+	id INT NOT NULL AUTO_INCREMENT,
+	Fname VARCHAR(30) NOT NULL,
+	Sname VARCHAR(30) NOT NULL,
+	DOB DATE NOT NULL,
+	BPL VARCHAR(30) NOT NULL,
+	PRIMARY KEY(id)
+);
+
+CREATE TABLE IF NOT EXISTS table2 (
+	id INT NOT NULL AUTO_INCREMENT,
+	Fname VARCHAR(30) NOT NULL,
+	Sname VARCHAR(30) NOT NULL,
+	Auto ENUM("Audi", "BMW", "Lada"),
+	idParent INT NOT NULL,
+	PRIMARY KEY(id),
+	INDEX ind2 (id),
+	FOREIGN KEY (idParent)
+		REFERENCES table1(id)
+		ON DELETE CASCADE 
+);
+
+CREATE TABLE IF NOT EXISTS table3 (
+	id INT NOT NULL AUTO_INCREMENT,
+	Fname VARCHAR(30) NOT NULL,
+	Sname VARCHAR(30) NOT NULL,
+	Coins INT NOT NULL,
+	idParent INT NOT NULL,
+	PRIMARY KEY(id),
+	INDEX ind2 (id),
+	FOREIGN KEY (idParent)
+		REFERENCES table1(id)
+		ON DELETE CASCADE 
+);
+
+SET GLOBAL log_bin_trust_function_creators = 1;
+
+--Определяет стоимость авто
+CREATE FUNCTION coinsPerCar (n CHAR(4))
+RETURNS INT
+BEGIN
+	DECLARE num INT;
+	IF n = 'Audi' THEN 
+	SET num = 300;
+	ELSEIF n = 'BMW' THEN 
+	SET num = 200;
+	ELSEIF n = 'Lada' THEN 
+	SET num = 100;
+	END IF;
+	RETURN num;
+END
+
+--
+CREATE FUNCTION myId (car CHAR (4))
+RETURNS INT
+BEGIN
+	DECLARE id_f INT
+
+END
+
+--Создает строки в table2 и table1
+CREATE TRIGGER newPeople AFTER INSERT ON table1
+FOR EACH ROW
+BEGIN
+	INSERT INTO table2 VALUES (NEW.id, NEW.Fname, NEW.Sname, NULL, NEW.id);
+	INSERT INTO table3 VALUES (NEW.id, NEW.Fname, NEW.Sname, 0, NEW.id);
+END
+
+INSERT INTO table1 VALUES (1, "Djon", "Doe",  "1994-02-02", "Ivanovo");
+
+CREATE TRIGGER newCar AFTER UPDATE ON table2
+FOR EACH ROW
+BEGIN
+	SELECT @i := 0;
+	UPDATE table3 SET Coins=coinsPerCar(NEW.Auto) WHERE id = (NEW.Auto);
+END
